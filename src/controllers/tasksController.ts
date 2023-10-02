@@ -1,76 +1,71 @@
 import { Request, Response } from "express"
-import { ITask, Task } from "../models/task"
+import prisma from '../database/client'
 
-export class TasksController {
-    public async getTasks(req: Request, res: Response): Promise<void> {
-        const tasks = await Task.find()
-        res.json({
-            data: tasks,
-            message: 'Query de todas as tasks realizado com sucesso!'
-        })
-    }
-
-    public async getTasksById(req: Request, res: Response): Promise<void> {
-        const task = await Task.findOne({ taskId: req.params.id })
-        if (task === null) {
-            res.json({
-                status: 404,
-                data: [],
-                message: 'Não foi encontrado uma task com o id enviado.'
-            })
-        } else {
-            res.json({
-                data: task,
-                message: 'Query da task em especifico realizado com sucesso!'
-            })
+export class TaskController {
+    public async create(req: Request, res: Response): Promise<void> {
+        try {
+            await prisma.tasks.create({ data: req.body })
+            res.status(201).end()
+        } catch (error) {
+            console.error(error)
+            res.status(500).send(error)
         }
     }
 
-    public async createTasks(req: Request, res: Response): Promise<void> {
-        const newTask: ITask = new Task(req.body)
+    public async retrieveAll(req: Request, res: Response): Promise<void> {
+        try {
+            const result = await prisma.tasks.findMany({ where: { idProject: req.params.id } })
+            res.status(200).send(result)
+        } catch (error) {
+            console.error(error)
+            res.status(500).send(error)
+        }
 
-        const task = await Task.findOne({ taskId: req.body.taskId })
+    }
 
-        if (task === null) {
-            const result = await newTask.save()
+    public async update(req: Request, res: Response): Promise<void> {
+        try {
+            const result = await prisma.tasks.update({
+                where: { id: req.params.id },
+                data: req.body
+            })
 
-            if (result === null) {
-                res.sendStatus(500)
+            if (result) {
+                res.status(204).end()
             } else {
-                res.status(201).json({ status: 201, data: result })
+                res.json({
+                    status: 404,
+                    message: 'Não foi encontrado uma task com o id enviado para ser atualizada.'
+                })
+                .end()
             }
-
-        } else {
-            res.sendStatus(422)
+        } catch (error) {
+            console.log(error)
+            res.status(500).send(error)
         }
+
+
     }
 
-    public async updateTasks(req: Request, res: Response): Promise<void> {
-        const task = await Task.findOneAndUpdate({ taskId: req.params.id }, req.body)
-
-        if (task === null) {
-            res.json({
-                status: 404,
-                data: [],
-                message: 'Não foi encontrado uma task com o id enviado para ser atualizada.'
+    public async delete(req: Request, res: Response): Promise<void> {
+        try {
+            const result = await prisma.tasks.delete({
+                where: { id: req.params.id }
             })
-        } else {
-            const updatedTask = { taskId: req.params.id, ...req.body }
-            res.json({ status: res.status, data: updatedTask })
-        }
-    }
 
-    public async deleteTasks(req: Request, res: Response): Promise<void> {
-        const task = await Task.findOneAndDelete({ taskId: req.params.id })
-
-        if (task === null) {
-            res.json({
-                status: 404,
-                data: [],
-                message: 'Não foi encontrado uma task com o id enviado para ser deletada.'
-            })
-        } else {
-            res.json({ message: "Task deletada com sucesso" })
+            if (result) {
+                res.json({status: 204}).end()
+            } else {
+                res.json({
+                    status: 404,
+                    message: 'Não foi encontrado uma task com o id enviado para ser deletada.'
+                })
+                .end()
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).send(error)
         }
+
     }
 }

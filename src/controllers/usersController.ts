@@ -1,43 +1,67 @@
 import { Request, Response } from "express"
-import { User } from "../models/user"
+
+import prisma from '../database/client'
+import { decrypt, encryptId } from "../encrypt/crypto"
 
 export class UserController {
+    public async create(req: Request, res: Response): Promise<void> {
+        req.body.id = encryptId(req.body.id)
 
-    public async registerUser(req: Request, res: Response): Promise<void> {
-        const user = await User.findOne({ userId: req.body.id })
-
-        if (user === null) {
-            const result = await User.create({
-                userId: req.body.id,
-                username: req.body.username,
-                email: req.body.email
-            })
-    
-            res.send({ 
-                status: 201,
-                data: result,
-                message: 'Usuário criado com sucesso!'
-            })
-        } else {
-            res.send({
-                message: 'Usuário já cadastrado.'
-            })
+        try {
+            await prisma.users.create({ data: req.body })
+            res.status(201).end()
+        } catch (error) {
+            res.end()
+            console.error(error)
         }
     }
 
-    public async getUserById(req: Request, res: Response): Promise<void> {
-        const user = await User.findOne({ userId: req.params.id })
+    public async update(req: Request, res: Response): Promise<void> {
+        req.params.id = encryptId(req.params.id)
+        try {
+            const result = await prisma.users.update({
+                where: { id: req.params.id },
+                data: req.body
+            })
 
-        if (user === null) {
-            res.json({
-                data: {},
-                message: 'Não foi encontrado um usuário com este id.'
-            })
-        } else {
-            res.json({
-                data: user,
-                message: 'Query do usuário em especifico realizado com sucesso!'
-            })
+            if (result) {
+                res.status(204).end()
+            } else {
+                res.json({
+                    status: 404,
+                    message: 'Não foi encontrado um usuário com o id enviado para ser atualizado.'
+                })
+                    .end()
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).send(error)
         }
+
+
+    }
+
+    public async retrieveOne(req: Request, res: Response): Promise<void> {
+        try {
+            req.params.id = encryptId(req.params.id)
+            const result = await prisma.users.findUnique({
+                where: { id: req.params.id }
+            })
+
+            if (result) {
+                result.id = decrypt(result.id)
+                res.json({ status: 200, ...result})
+            } else {
+                res.json({
+                    status: 404,
+                    message: 'Não foi encontrado um usuário com o id enviado.'
+                })
+                    .end()
+            }
+        } catch (error) {
+            console.error(error)
+            res.status(500).send(error)
+        }
+
     }
 }
