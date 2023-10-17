@@ -31,12 +31,15 @@ class Server {
     }
 
 
+
+
+
     public start(): void {
         this.app.listen(this.app.get("port"), () => {
             console.log(
-            "Servidor ligado na porta:",
-            this.app.get("port"),
-            "🟢"
+                "Servidor ligado na porta:",
+                this.app.get("port"),
+                "🟢"
             )
         })
     }

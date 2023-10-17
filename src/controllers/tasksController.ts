@@ -4,8 +4,8 @@ import prisma from '../database/client'
 export class TaskController {
     public async create(req: Request, res: Response): Promise<void> {
         try {
-            await prisma.tasks.create({ data: req.body })
-            res.status(201).end()
+            const response = await prisma.tasks.create({ data: req.body })
+            res.status(201).json(response)
         } catch (error) {
             console.error(error)
             res.status(500).send(error)
@@ -14,7 +14,7 @@ export class TaskController {
 
     public async retrieveAll(req: Request, res: Response): Promise<void> {
         try {
-            const result = await prisma.tasks.findMany({ where: { idProject: req.params.id } })
+            const result = await prisma.tasks.findMany({ where: { idProject: req.params.id }, orderBy: {createdDate: 'desc'}})
             res.status(200).send(result)
         } catch (error) {
             console.error(error)

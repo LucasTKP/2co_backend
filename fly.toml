@@ -4,7 +4,7 @@
 #
 
 app = "2co"
-primary_region = "gru"
+primary_region = "mia"
 
 [build]
 

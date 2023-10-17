@@ -64,9 +64,15 @@ export class ProjectController {
     }
 
     public async retrieveOne(req: Request, res: Response): Promise<void> {
+        const include = {
+            coworkers: true,
+            tasks:true
+        }
+
         const id = encryptId(req.params.id)
         try {
             const result = await prisma.projects.findUnique({
+                include,
                 where: { id: id }
             })
 
