@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,33 +8,35 @@ datasource db {
 }
 
 model Users {
-  id           String     @id @map("_id") 
-  username     String     @unique
-  email        String     @unique
-  avatar       String
-  idProjects   String[] 
-  projects     Projects[] @relation(fields: [idProjects], references: [id])
-  tasks        Tasks[]
+  id         String     @id @map("_id")
+  username   String     @unique
+  email      String     @unique
+  avatar     String
+  idProjects String[]
+  projects   Projects[] @relation(fields: [idProjects], references: [id])
 }
 
 model Projects {
-  id              String   @id @map("_id") 
-  name            String   @unique
-  tasks           Tasks[]
-  idCowokers      String[] 
-  coworkers       Users[]  @relation(fields: [idCowokers], references: [id])
+  id         String   @id @map("_id")
+  name       String   @unique
+  tasks      Tasks[]
+  idCowokers String[]
+  coworkers  Users[]  @relation(fields: [idCowokers], references: [id])
 }
 
 model Tasks {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  idUser      String    @unique
-  idProject   String    @unique
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  idExecuter  String 
+  idOwner     String 
+  idProject   String 
+  status      TaskStatus
   title       String
   description String
-  createdDate DateTime
-  limitDate   DateTime
-  Users       Users?    @relation(fields: [usersId], references: [id])
-  usersId     String?  
-  Projects    Projects? @relation(fields: [projectsId], references: [id])
-  projectsId  String?
+  createdDate Int
+  Projects    Projects @relation(fields: [idProject], references: [id])
+}
+
+enum TaskStatus {
+  open
+  concluded
 }

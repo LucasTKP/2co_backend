@@ -17,7 +17,6 @@ export class UserController {
     }
 
     public async update(req: Request, res: Response): Promise<void> {
-        req.params.id = encryptId(req.params.id)
         try {
             const result = await prisma.users.update({
                 where: { id: req.params.id },
@@ -49,7 +48,6 @@ export class UserController {
             })
 
             if (result) {
-                result.id = decrypt(result.id)
                 res.json({ status: 200, ...result})
             } else {
                 res.json({
